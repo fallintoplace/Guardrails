@@ -30,6 +30,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -80,9 +81,11 @@ jobs:
         run: |
           git cliff \
             --unreleased \
-            --tag     v${{ steps.version.outputs.version }} \
+            --tag     v${STEPS_VERSION_OUTPUTS_VERSION} \
             --strip all \
             > CHANGELOG.new.md
+        env:
+          STEPS_VERSION_OUTPUTS_VERSION: ${{ steps.version.outputs.version }}
 
       - name: Inject release block just above the previous entry
         run: |
@@ -102,13 +105,17 @@ jobs:
       - name: Update version with Poetry
         run: |
           # Use Poetry to update the version
-          poetry version ${{ steps.version.outputs.version }}
+          poetry version ${STEPS_VERSION_OUTPUTS_VERSION}
+        env:
+          STEPS_VERSION_OUTPUTS_VERSION: ${{ steps.version.outputs.version }}
 
       - name: Update version in README.md
         run: |
           # Update the version reference in README.md
-          sed -i "s/\[0\.[0-9]*\.[0-9]*\](https:\/\/github\.com\/NVIDIA\/NeMo-Guardrails\/tree\/v0\.[0-9]*\.[0-9]*)/[${{ steps.version.outputs.version }}](https:\/\/github.com\/NVIDIA\/NeMo-Guardrails\/tree\/v${{ steps.version.outputs.version }})/g" README.md
-          sed -i "s/version: \[0\.[0-9]*\.[0-9]*\]/version: [${{ steps.version.outputs.version }}]/g" README.md
+          sed -i "s/\[0\.[0-9]*\.[0-9]*\](https:\/\/github\.com\/NVIDIA\/NeMo-Guardrails\/tree\/v0\.[0-9]*\.[0-9]*)/[${STEPS_VERSION_OUTPUTS_VERSION}](https:\/\/github.com\/NVIDIA\/NeMo-Guardrails\/tree\/v${STEPS_VERSION_OUTPUTS_VERSION})/g" README.md
+          sed -i "s/version: \[0\.[0-9]*\.[0-9]*\]/version: [${STEPS_VERSION_OUTPUTS_VERSION}]/g" README.md
+        env:
+          STEPS_VERSION_OUTPUTS_VERSION: ${{ steps.version.outputs.version }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
