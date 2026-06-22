@@ -12,6 +12,9 @@ env:
   POETRY_VERSION: 1.8.2
   PYTHON_VERSION: "3.11"
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint Code
