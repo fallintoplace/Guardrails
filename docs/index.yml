@@ -491,6 +491,9 @@ navigation:
           - page: OpenTelemetry Logs
             path: observability/tracing/opentelemetry-logs.mdx
             slug: opentelemetry-logs
+          - page: Content Capture
+            path: observability/tracing/content-capture.mdx
+            slug: content-capture
           - page: Troubleshooting
             path: observability/tracing/troubleshooting.mdx
             slug: troubleshooting
