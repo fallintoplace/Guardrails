@@ -327,10 +327,10 @@ def test_openai_client_with_rails_disabled(openai_client):
     not (LIVE_TEST_MODE and os.environ.get("OPENAI_API_KEY")),
     reason="LIVE_TEST_MODE or TEST_LIVE_MODE and OPENAI_API_KEY are required for this test.",
 )
-def test_list_models_openai(make_openai_client):
+def test_list_models_openai(make_openai_client, monkeypatch):
     """List models from the OpenAI API."""
-    os.environ.setdefault("MAIN_MODEL_BASE_URL", "https://api.openai.com")
-    os.environ["MAIN_MODEL_ENGINE"] = "openai"
+    monkeypatch.setenv("MAIN_MODEL_BASE_URL", os.environ.get("MAIN_MODEL_BASE_URL") or "https://api.openai.com")
+    monkeypatch.setenv("MAIN_MODEL_ENGINE", "openai")
 
     openai_client = make_openai_client("not-used")
     models = list(openai_client.models.list())
@@ -346,10 +346,10 @@ def test_list_models_openai(make_openai_client):
     not (LIVE_TEST_MODE and os.environ.get("OPENAI_API_KEY")),
     reason="LIVE_TEST_MODE or TEST_LIVE_MODE and OPENAI_API_KEY are required for this test.",
 )
-def test_list_models_openai_fields(make_openai_client):
+def test_list_models_openai_fields(make_openai_client, monkeypatch):
     """Verify that well-known OpenAI models appear with expected fields."""
-    os.environ.setdefault("MAIN_MODEL_BASE_URL", "https://api.openai.com")
-    os.environ["MAIN_MODEL_ENGINE"] = "openai"
+    monkeypatch.setenv("MAIN_MODEL_BASE_URL", os.environ.get("MAIN_MODEL_BASE_URL") or "https://api.openai.com")
+    monkeypatch.setenv("MAIN_MODEL_ENGINE", "openai")
 
     openai_client = make_openai_client("not-used")
     models = {m.id: m for m in openai_client.models.list()}
@@ -367,9 +367,9 @@ def test_list_models_openai_fields(make_openai_client):
     not (LIVE_TEST_MODE and os.environ.get("ANTHROPIC_API_KEY")),
     reason="LIVE_TEST_MODE or TEST_LIVE_MODE and ANTHROPIC_API_KEY are required for this test.",
 )
-def test_list_models_anthropic(make_openai_client):
+def test_list_models_anthropic(make_openai_client, monkeypatch):
     """List models from the Anthropic API."""
-    os.environ["MAIN_MODEL_ENGINE"] = "anthropic"
+    monkeypatch.setenv("MAIN_MODEL_ENGINE", "anthropic")
 
     openai_client = make_openai_client("not-used")
     models = list(openai_client.models.list())
@@ -386,9 +386,9 @@ def test_list_models_anthropic(make_openai_client):
     not (LIVE_TEST_MODE and os.environ.get("COHERE_API_KEY")),
     reason="LIVE_TEST_MODE or TEST_LIVE_MODE and COHERE_API_KEY are required for this test.",
 )
-def test_list_models_cohere(make_openai_client):
+def test_list_models_cohere(make_openai_client, monkeypatch):
     """List models from the Cohere API."""
-    os.environ["MAIN_MODEL_ENGINE"] = "cohere"
+    monkeypatch.setenv("MAIN_MODEL_ENGINE", "cohere")
 
     openai_client = make_openai_client("not-used")
     models = list(openai_client.models.list())
@@ -405,9 +405,9 @@ def test_list_models_cohere(make_openai_client):
     not (LIVE_TEST_MODE and os.environ.get("AZURE_OPENAI_ENDPOINT") and os.environ.get("AZURE_OPENAI_API_KEY")),
     reason="LIVE_TEST_MODE or TEST_LIVE_MODE, AZURE_OPENAI_ENDPOINT, and AZURE_OPENAI_API_KEY are required.",
 )
-def test_list_models_azure(make_openai_client):
+def test_list_models_azure(make_openai_client, monkeypatch):
     """List models from Azure OpenAI."""
-    os.environ["MAIN_MODEL_ENGINE"] = "azure"
+    monkeypatch.setenv("MAIN_MODEL_ENGINE", "azure")
 
     openai_client = make_openai_client("not-used")
     models = list(openai_client.models.list())

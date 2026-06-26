@@ -1028,7 +1028,10 @@ def test_list_models_forwards_auth_header():
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
-    with patch.dict(os.environ, {"MAIN_MODEL_BASE_URL": "http://localhost:8000", "OPENAI_API_KEY": ""}):
+    with patch.dict(
+        os.environ,
+        {"MAIN_MODEL_ENGINE": "openai", "MAIN_MODEL_BASE_URL": "http://localhost:8000", "OPENAI_API_KEY": ""},
+    ):
         with patch("httpx.AsyncClient", return_value=mock_client):
             response = client.get(
                 "/v1/models",
@@ -1051,6 +1054,7 @@ def test_list_models_prefers_openai_api_key_over_auth_header():
     with patch.dict(
         os.environ,
         {
+            "MAIN_MODEL_ENGINE": "openai",
             "MAIN_MODEL_BASE_URL": "http://localhost:8000",
             "OPENAI_API_KEY": "sk-env-key",
         },
@@ -1077,6 +1081,7 @@ def test_list_models_uses_openai_api_key_fallback():
     with patch.dict(
         os.environ,
         {
+            "MAIN_MODEL_ENGINE": "openai",
             "MAIN_MODEL_BASE_URL": "http://localhost:8000",
             "OPENAI_API_KEY": "sk-test-key",
         },

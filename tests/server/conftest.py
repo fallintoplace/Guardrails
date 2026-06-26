@@ -13,12 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 import pytest
 
 
 @pytest.fixture(autouse=True)
 def _disable_chat_ui(monkeypatch):
-    if "NEMO_GUARDRAILS_DISABLE_CHAT_UI" not in os.environ:
-        monkeypatch.setenv("NEMO_GUARDRAILS_DISABLE_CHAT_UI", "true")
+    # Force the isolated path for every server test, regardless of any ambient
+    # value; monkeypatch restores the prior state afterwards.
+    monkeypatch.setenv("NEMO_GUARDRAILS_DISABLE_CHAT_UI", "true")
