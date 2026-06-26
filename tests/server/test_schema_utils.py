@@ -582,11 +582,24 @@ async def test_fetch_unknown_engine_no_base_url():
 async def test_fetch_auth_forwarded():
     """Incoming Authorization header is forwarded for OpenAI-compatible providers."""
     mock = _mock_httpx({"data": []})
-    with patch.dict(os.environ, {"MAIN_MODEL_BASE_URL": "http://localhost:8000"}):
+    with patch.dict(os.environ, {"MAIN_MODEL_BASE_URL": "http://localhost:8000", "OPENAI_API_KEY": ""}):
         with patch("httpx.AsyncClient", return_value=mock):
             await fetch_models("openai", {"Authorization": "Bearer user-token"})
     call_headers = mock.get.call_args.kwargs["headers"]
     assert call_headers["Authorization"] == "Bearer user-token"
+
+
+@pytest.mark.asyncio
+async def test_fetch_env_auth_precedes_forwarded_auth():
+    mock = _mock_httpx({"data": []})
+    with patch.dict(
+        os.environ,
+        {"MAIN_MODEL_BASE_URL": "http://localhost:8000", "OPENAI_API_KEY": "sk-env-key"},
+    ):
+        with patch("httpx.AsyncClient", return_value=mock):
+            await fetch_models("openai", {"Authorization": "Bearer not-used"})
+    call_headers = mock.get.call_args.kwargs["headers"]
+    assert call_headers["Authorization"] == "Bearer sk-env-key"
 
 
 @pytest.mark.asyncio

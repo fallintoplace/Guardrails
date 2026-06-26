@@ -25,6 +25,12 @@ from openai.types.model import Model
 
 from nemoguardrails.server import api
 
+# The live `test_list_models_*` tests below are opt-in: they require LIVE_TEST_MODE
+# (or TEST_LIVE_MODE) to be set in addition to the relevant provider API key. A
+# provider key alone is intentionally NOT sufficient, so CI that exports only
+# OPENAI_API_KEY (etc.) skips them and never reaches a live provider.
+LIVE_TEST_MODE = os.environ.get("LIVE_TEST_MODE") or os.environ.get("TEST_LIVE_MODE")
+
 
 @pytest.fixture(scope="function", autouse=True)
 def set_rails_config_path():
@@ -45,17 +51,22 @@ def set_rails_config_path():
 
 
 @pytest.fixture(scope="function")
-def openai_client():
+def make_openai_client():
     """Create an OpenAI client that uses the guardrails FastAPI app via TestClient."""
-    # Create a TestClient for the FastAPI app
-    test_client = TestClient(api.app)
 
-    client = OpenAI(
-        api_key="dummy-key",
-        base_url="http://dummy-url/v1",
-        http_client=test_client,
-    )
-    return client
+    def _make_client(api_key="dummy-key"):
+        return OpenAI(
+            api_key=api_key,
+            base_url="http://dummy-url/v1",
+            http_client=TestClient(api.app),
+        )
+
+    return _make_client
+
+
+@pytest.fixture(scope="function")
+def openai_client(make_openai_client):
+    return make_openai_client()
 
 
 def test_openai_client_chat_completion(openai_client):
@@ -313,14 +324,15 @@ def test_openai_client_with_rails_disabled(openai_client):
 
 
 @pytest.mark.skipif(
-    not os.environ.get("OPENAI_API_KEY"),
-    reason="OPENAI_API_KEY is required for this test.",
+    not (LIVE_TEST_MODE and os.environ.get("OPENAI_API_KEY")),
+    reason="LIVE_TEST_MODE or TEST_LIVE_MODE and OPENAI_API_KEY are required for this test.",
 )
-def test_list_models_openai(openai_client):
+def test_list_models_openai(make_openai_client):
     """List models from the OpenAI API."""
     os.environ.setdefault("MAIN_MODEL_BASE_URL", "https://api.openai.com")
     os.environ["MAIN_MODEL_ENGINE"] = "openai"
 
+    openai_client = make_openai_client("not-used")
     models = list(openai_client.models.list())
 
     assert len(models) > 0
@@ -331,14 +343,15 @@ def test_list_models_openai(openai_client):
 
 
 @pytest.mark.skipif(
-    not os.environ.get("OPENAI_API_KEY"),
-    reason="OPENAI_API_KEY is required for this test.",
+    not (LIVE_TEST_MODE and os.environ.get("OPENAI_API_KEY")),
+    reason="LIVE_TEST_MODE or TEST_LIVE_MODE and OPENAI_API_KEY are required for this test.",
 )
-def test_list_models_openai_fields(openai_client):
+def test_list_models_openai_fields(make_openai_client):
     """Verify that well-known OpenAI models appear with expected fields."""
     os.environ.setdefault("MAIN_MODEL_BASE_URL", "https://api.openai.com")
     os.environ["MAIN_MODEL_ENGINE"] = "openai"
 
+    openai_client = make_openai_client("not-used")
     models = {m.id: m for m in openai_client.models.list()}
 
     # At least one GPT model should be present
@@ -351,13 +364,14 @@ def test_list_models_openai_fields(openai_client):
 
 
 @pytest.mark.skipif(
-    not os.environ.get("ANTHROPIC_API_KEY"),
-    reason="ANTHROPIC_API_KEY is required for this test.",
+    not (LIVE_TEST_MODE and os.environ.get("ANTHROPIC_API_KEY")),
+    reason="LIVE_TEST_MODE or TEST_LIVE_MODE and ANTHROPIC_API_KEY are required for this test.",
 )
-def test_list_models_anthropic(openai_client):
+def test_list_models_anthropic(make_openai_client):
     """List models from the Anthropic API."""
     os.environ["MAIN_MODEL_ENGINE"] = "anthropic"
 
+    openai_client = make_openai_client("not-used")
     models = list(openai_client.models.list())
 
     assert len(models) > 0
@@ -369,13 +383,14 @@ def test_list_models_anthropic(openai_client):
 
 
 @pytest.mark.skipif(
-    not os.environ.get("COHERE_API_KEY"),
-    reason="COHERE_API_KEY is required for this test.",
+    not (LIVE_TEST_MODE and os.environ.get("COHERE_API_KEY")),
+    reason="LIVE_TEST_MODE or TEST_LIVE_MODE and COHERE_API_KEY are required for this test.",
 )
-def test_list_models_cohere(openai_client):
+def test_list_models_cohere(make_openai_client):
     """List models from the Cohere API."""
     os.environ["MAIN_MODEL_ENGINE"] = "cohere"
 
+    openai_client = make_openai_client("not-used")
     models = list(openai_client.models.list())
 
     assert len(models) > 0
@@ -387,13 +402,14 @@ def test_list_models_cohere(openai_client):
 
 
 @pytest.mark.skipif(
-    not (os.environ.get("AZURE_OPENAI_ENDPOINT") and os.environ.get("AZURE_OPENAI_API_KEY")),
-    reason="AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY are required for this test.",
+    not (LIVE_TEST_MODE and os.environ.get("AZURE_OPENAI_ENDPOINT") and os.environ.get("AZURE_OPENAI_API_KEY")),
+    reason="LIVE_TEST_MODE or TEST_LIVE_MODE, AZURE_OPENAI_ENDPOINT, and AZURE_OPENAI_API_KEY are required.",
 )
-def test_list_models_azure(openai_client):
+def test_list_models_azure(make_openai_client):
     """List models from Azure OpenAI."""
     os.environ["MAIN_MODEL_ENGINE"] = "azure"
 
+    openai_client = make_openai_client("not-used")
     models = list(openai_client.models.list())
 
     assert len(models) > 0
